@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NeuroScan — MRT Tahlil Tizimi</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#080b14;--bg2:#0e1220;--bg3:#141828;--card:#1a1f35;--border:#252a42;--purple:#7c6ff7;--blue:#4f9cf9;--green:#22c55e;--red:#ef4444;--amber:#f59e0b;--text:#e2e8f0;--muted:#64748b}
+body{font-family:'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* NAV */
+nav{display:flex;align-items:center;justify-content:space-between;padding:16px 40px;border-bottom:1px solid var(--border);background:var(--bg2)}
+.logo{font-size:20px;font-weight:700;background:linear-gradient(135deg,var(--purple),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-badge{font-size:11px;padding:4px 10px;border-radius:20px;border:1px solid var(--border);color:var(--muted)}
+
+/* HERO */
+.hero{text-align:center;padding:60px 20px 40px}
+.hero h1{font-size:42px;font-weight:800;margin-bottom:12px;background:linear-gradient(135deg,#fff,#94a3b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{color:var(--muted);font-size:16px;max-width:500px;margin:0 auto 32px}
+.tech-pills{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.pill{padding:5px 14px;border-radius:20px;font-size:12px;border:1px solid var(--border);color:var(--muted);background:var(--bg3)}
+
+/* MAIN LAYOUT */
+.container{max-width:1100px;margin:0 auto;padding:0 24px 60px}
+.grid{display:grid;grid-template-columns:380px 1fr;gap:24px;align-items:start}
+
+/* UPLOAD */
+.upload-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px}
+.upload-card h2{font-size:15px;font-weight:600;margin-bottom:20px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.upload-zone{border:2px dashed var(--border);border-radius:14px;padding:40px 20px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:20px;position:relative}
+.upload-zone:hover{border-color:var(--purple);background:rgba(124,111,247,0.05)}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.upload-icon{font-size:48px;margin-bottom:12px}
+.upload-zone strong{display:block;margin-bottom:6px;font-size:15px}
+.upload-zone span{font-size:12px;color:var(--muted)}
+#preview-box{display:none;margin-bottom:20px;text-align:center}
+#preview{width:100%;border-radius:12px;max-height:220px;object-fit:cover}
+.img-info{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.info-chip{font-size:11px;padding:3px 10px;border-radius:8px;background:var(--bg3);border:1px solid var(--border);color:var(--muted)}
+
+/* TECH SELECT */
+.tech-select{margin-bottom:20px}
+.tech-select label{font-size:12px;color:var(--muted);display:block;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px}
+.tech-options{display:flex;flex-direction:column;gap:8px}
+.tech-opt{display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:10px;border:1px solid var(--border);cursor:pointer;transition:all 0.2s;background:var(--bg3)}
+.tech-opt:hover{border-color:var(--purple)}
+.tech-opt.selected{border-color:var(--purple);background:rgba(124,111,247,0.1)}
+.tech-opt input{accent-color:var(--purple)}
+.tech-opt-text{flex:1}
+.tech-opt-name{font-size:13px;font-weight:500}
+.tech-opt-desc{font-size:11px;color:var(--muted);margin-top:2px}
+
+.btn{width:100%;padding:15px;border:none;border-radius:12px;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.2s;background:linear-gradient(135deg,var(--purple),var(--blue));color:#fff}
+.btn:hover{opacity:0.9;transform:translateY(-1px)}
+.btn:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+
+/* RESULTS */
+.results-col{display:flex;flex-direction:column;gap:20px}
+.empty-state{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:60px;text-align:center;color:var(--muted)}
+.empty-icon{font-size:48px;margin-bottom:12px}
+
+/* XULOSA CARD */
+.xulosa-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px}
+.xulosa-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.xulosa-top h2{font-size:14px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.umumiy-badge{padding:6px 16px;border-radius:20px;font-size:13px;font-weight:600}
+.badge-xavf{background:rgba(239,68,68,0.15);color:var(--red);border:1px solid rgba(239,68,68,0.3)}
+.badge-orta{background:rgba(245,158,11,0.15);color:var(--amber);border:1px solid rgba(245,158,11,0.3)}
+.badge-normal{background:rgba(34,197,94,0.15);color:var(--green);border:1px solid rgba(34,197,94,0.3)}
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.chart-box{background:var(--bg3);border-radius:12px;padding:16px}
+.chart-box h4{font-size:12px;color:var(--muted);margin-bottom:12px;text-align:center}
+.chart-wrap{position:relative;height:160px}
+
+/* MODEL CARDS */
+.model-card{background:var(--card);border:1px solid var(--border);border-radius:20px;overflow:hidden}
+.model-header{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.model-header-left{}
+.model-tech{font-size:11px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px}
+.model-name{font-size:16px;font-weight:600}
+.model-xulosa{font-size:13px;margin-top:4px}
+.daraja-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:6px}
+.dot-xavf{background:var(--red);box-shadow:0 0 8px var(--red)}
+.dot-orta{background:var(--amber);box-shadow:0 0 8px var(--amber)}
+.dot-normal{background:var(--green);box-shadow:0 0 8px var(--green)}
+
+.model-body{padding:20px 24px}
+.progress-section{margin-bottom:18px}
+.progress-label-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.progress-label-row span:first-child{font-size:13px;color:var(--muted)}
+.progress-val{font-size:20px;font-weight:700}
+.progress-bg{height:10px;background:rgba(255,255,255,0.06);border-radius:99px;overflow:hidden}
+.progress-fill{height:100%;border-radius:99px;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+
+.sabablar{margin-bottom:18px}
+.sabablar h4{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px}
+.sabab-item{display:flex;gap:8px;align-items:flex-start;margin-bottom:7px;font-size:13px;line-height:1.5}
+.sabab-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:6px}
+
+.metrikalar h4{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px}
+.metrik-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.metrik-item{background:var(--bg3);border-radius:10px;padding:10px 12px;border:1px solid var(--border)}
+.metrik-val{font-size:18px;font-weight:600;font-family:monospace}
+.metrik-lbl{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* LOADING */
+.loading{display:none;text-align:center;padding:40px}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--purple);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:768px){.grid{grid-template-columns:1fr}.chart-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="logo">NeuroScan AI</div>
+  <div style="display:flex;gap:10px">
+    <span class="nav-badge">v2.0</span>
+    <span class="nav-badge">Demo rejim</span>
+  </div>
+</nav>
+
+<div class="hero">
+  <h1>MRT Tahlil Tizimi</h1>
+  <p>Sun'iy intellekt yordamida miya rasmlarini 3 ta mustaqil model orqali tahlil qiling</p>
+  <div class="tech-pills">
+    <span class="pill">Piksel tahlili</span>
+    <span class="pill">Gradient analizi</span>
+    <span class="pill">Neyron tarmoq</span>
+    <span class="pill">NumPy</span>
+    <span class="pill">Flask</span>
+  </div>
+</div>
+
+<div class="container">
+  <div class="grid">
+
+    <!-- CHAP: UPLOAD -->
+    <div>
+      <div class="upload-card">
+        <h2>Rasm yuklash</h2>
+        <div class="upload-zone" id="uploadZone">
+          <input type="file" id="fayl" accept="image/*" onchange="rasmTanlandi(this)">
+          <div class="upload-icon">🧠</div>
+          <strong>Rasmni tanlang</strong>
+          <span>PNG, JPG — MRT yoki CT rasm</span>
+        </div>
+        <div id="preview-box">
+          <img id="preview" alt="MRT rasm">
+          <div class="img-info" id="imgInfo"></div>
+        </div>
+
+        <div class="tech-select">
+          <label>Tahlil texnologiyasini tanlang</label>
+          <div class="tech-options">
+            <label class="tech-opt selected" id="opt1">
+              <input type="radio" name="tech" value="piksel" checked onchange="techTanlandi()">
+              <div class="tech-opt-text">
+                <div class="tech-opt-name">Piksel intensivlik</div>
+                <div class="tech-opt-desc">Yorug'lik va zichlik tahlili</div>
+              </div>
+            </label>
+            <label class="tech-opt" id="opt2">
+              <input type="radio" name="tech" value="gradient" onchange="techTanlandi()">
+              <div class="tech-opt-text">
+                <div class="tech-opt-name">Gradient analizi</div>
+                <div class="tech-opt-desc">Chegara va kontrast tahlili</div>
+              </div>
+            </label>
+            <label class="tech-opt" id="opt3">
+              <input type="radio" name="tech" value="neyron" onchange="techTanlandi()">
+              <div class="tech-opt-text">
+                <div class="tech-opt-name">Neyron tarmoq (MLP)</div>
+                <div class="tech-opt-desc">3-qavatli chuqur o'rganish</div>
+              </div>
+            </label>
+            <label class="tech-opt" id="opt4">
+              <input type="radio" name="tech" value="hammasi" onchange="techTanlandi()">
+              <div class="tech-opt-text">
+                <div class="tech-opt-name">Barcha 3 ta model</div>
+                <div class="tech-opt-desc">To'liq qiyosiy tahlil</div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <button class="btn" id="btn" onclick="tahlilQil()" disabled>Tahlil qilish</button>
+      </div>
+    </div>
+
+    <!-- O'NG: NATIJALAR -->
+    <div class="results-col">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">🔬</div>
+        <div style="font-size:15px;margin-bottom:6px;color:var(--text)">Tahlil natijalari</div>
+        <div style="font-size:13px">Rasm yuklab, texnologiya tanlang</div>
+      </div>
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div style="color:var(--muted);font-size:14px" id="loadingText">Tahlil qilinmoqda...</div>
+      </div>
+      <div id="natijalar"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let charts = [];
+
+function techTanlandi() {
+  document.querySelectorAll('.tech-opt').forEach(o => o.classList.remove('selected'));
+  const sel = document.querySelector('input[name="tech"]:checked');
+  if (sel) sel.closest('.tech-opt').classList.add('selected');
+}
+
+function rasmTanlandi(input) {
+  const fayl = input.files[0];
+  if (!fayl) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = document.getElementById('preview');
+    img.src = e.target.result;
+    document.getElementById('preview-box').style.display = 'block';
+    document.getElementById('imgInfo').innerHTML = `
+      <span class="info-chip">${fayl.name}</span>
+      <span class="info-chip">${(fayl.size/1024).toFixed(1)} KB</span>
+      <span class="info-chip">${fayl.type}</span>`;
+  };
+  reader.readAsDataURL(fayl);
+  document.getElementById('btn').disabled = false;
+  document.getElementById('natijalar').innerHTML = '';
+  document.getElementById('emptyState').style.display = 'block';
+}
+
+async function tahlilQil() {
+  const fayl = document.getElementById('fayl').files[0];
+  if (!fayl) return;
+  const tech = document.querySelector('input[name="tech"]:checked').value;
+  const btn = document.getElementById('btn');
+  btn.disabled = true;
+  btn.textContent = 'Tahlil qilinmoqda...';
+  document.getElementById('emptyState').style.display = 'none';
+  document.getElementById('natijalar').innerHTML = '';
+  document.getElementById('loading').style.display = 'block';
+
+  const msgs = ['Rasm qayta ishlanmoqda...','Modellar ishga tushirilmoqda...','Natijalar hisoblanmoqda...'];
+  let mi = 0;
+  const intv = setInterval(() => {
+    document.getElementById('loadingText').textContent = msgs[mi++ % msgs.length];
+  }, 800);
+
+  const form = new FormData();
+  form.append('rasm', fayl);
+  form.append('tech', tech);
+
+  try {
+    const res = await fetch('/tahlil', { method: 'POST', body: form });
+    const data = await res.json();
+    clearInterval(intv);
+    document.getElementById('loading').style.display = 'none';
+    render(data, tech);
+  } catch(e) {
+    clearInterval(intv);
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('natijalar').innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div><div>Xatolik yuz berdi</div></div>';
+  }
+  btn.disabled = false;
+  btn.textContent = 'Tahlil qilish';
+}
+
+function daraja(d) {
+  if (d === 'xavf') return { rang: '#ef4444', cls: 'xavf', matn: 'Shubhali' };
+  if (d === 'orta') return { rang: '#f59e0b', cls: 'orta', matn: "E'tibor kerak" };
+  return { rang: '#22c55e', cls: 'normal', matn: 'Normal' };
+}
+
+function render(data, tech) {
+  charts.forEach(c => c.destroy());
+  charts = [];
+  const div = document.getElementById('natijalar');
+  div.innerHTML = '';
+
+  const models = Array.isArray(data) ? data : [data];
+
+  // Umumiy xulosa + grafik (faqat 2+ model bo'lsa)
+  if (models.length > 1) {
+    const ort = models.reduce((a, m) => a + m.ehtimol, 0) / models.length;
+    const xavfCount = models.filter(m => m.daraja === 'xavf').length;
+    const umumiyDaraja = xavfCount >= 2 ? 'xavf' : xavfCount === 1 ? 'orta' : 'normal';
+    const d = daraja(umumiyDaraja);
+
+    const sumCard = document.createElement('div');
+    sumCard.className = 'xulosa-card';
+    sumCard.innerHTML = `
+      <div class="xulosa-top">
+        <h2>Umumiy xulosa</h2>
+        <span class="umumiy-badge badge-${d.cls}">${d.matn}</span>
+      </div>
+      <div class="chart-row">
+        <div class="chart-box">
+          <h4>Model natijalari (%)</h4>
+          <div class="chart-wrap"><canvas id="barChart"></canvas></div>
+        </div>
+        <div class="chart-box">
+          <h4>Daraja taqsimoti</h4>
+          <div class="chart-wrap"><canvas id="doughnutChart"></canvas></div>
+        </div>
+      </div>`;
+    div.appendChild(sumCard);
+
+    setTimeout(() => {
+      const bc = new Chart(document.getElementById('barChart'), {
+        type: 'bar',
+        data: {
+          labels: models.map(m => m.model),
+          datasets: [{
+            data: models.map(m => m.ehtimol),
+            backgroundColor: models.map(m => daraja(m.daraja).rang + '99'),
+            borderColor: models.map(m => daraja(m.daraja).rang),
+            borderWidth: 2, borderRadius: 8
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { min: 0, max: 100, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b', font: { size: 11 } } },
+            x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 10 } } }
+          }
+        }
+      });
+      charts.push(bc);
+
+      const nCount = models.filter(m => m.daraja === 'normal').length;
+      const oCount = models.filter(m => m.daraja === 'orta').length;
+      const xCount = models.filter(m => m.daraja === 'xavf').length;
+      const dc = new Chart(document.getElementById('doughnutChart'), {
+        type: 'doughnut',
+        data: {
+          labels: ['Normal', "E'tibor", 'Shubhali'],
+          datasets: [{
+            data: [nCount, oCount, xCount],
+            backgroundColor: ['#22c55e44', '#f59e0b44', '#ef444444'],
+            borderColor: ['#22c55e', '#f59e0b', '#ef4444'],
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom', labels: { color: '#64748b', font: { size: 11 }, padding: 12, boxWidth: 12 } } },
+          cutout: '65%'
+        }
+      });
+      charts.push(dc);
+    }, 100);
+  }
+
+  // Har bir model uchun karta
+  models.forEach((m, i) => {
+    const d = daraja(m.daraja);
+    const card = document.createElement('div');
+    card.className = 'model-card';
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(16px)';
+    card.innerHTML = `
+      <div class="model-header">
+        <div class="model-header-left">
+          <div class="model-tech">${m.texnologiya}</div>
+          <div class="model-name">${m.model}</div>
+          <div class="model-xulosa" style="color:${d.rang}">${m.xulosa}</div>
+        </div>
+        <div class="daraja-dot dot-${d.cls}"></div>
+      </div>
+      <div class="model-body">
+        <div class="progress-section">
+          <div class="progress-label-row">
+            <span>Anomaliya ehtimoli</span>
+            <span class="progress-val" style="color:${d.rang}">${m.ehtimol}%</span>
+          </div>
+          <div class="progress-bg">
+            <div class="progress-fill" id="prog${i}" style="width:0%;background:${d.rang}"></div>
+          </div>
+        </div>
+        <div class="sabablar">
+          <h4>Tahlil sabablari</h4>
+          ${m.sabablar.map(s => `<div class="sabab-item"><div class="sabab-dot" style="background:${d.rang}"></div><span>${s}</span></div>`).join('')}
+        </div>
+        <div class="metrikalar">
+          <h4>Texnik ko'rsatkichlar</h4>
+          <div class="metrik-grid">
+            ${Object.entries(m.metrikalar).map(([k, v]) => `
+              <div class="metrik-item">
+                <div class="metrik-val">${v}</div>
+                <div class="metrik-lbl">${k}</div>
+              </div>`).join('')}
+          </div>
+        </div>
+      </div>`;
+    div.appendChild(card);
+
+    setTimeout(() => {
+      card.style.transition = 'all 0.4s ease';
+      card.style.opacity = '1';
+      card.style.transform = 'translateY(0)';
+      setTimeout(() => {
+        const bar = document.getElementById('prog' + i);
+        if (bar) bar.style.width = m.ehtimol + '%';
+      }, 200);
+    }, i * 150);
+  });
+}
+</script>
+</body>
+</html>
